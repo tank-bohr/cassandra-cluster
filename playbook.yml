@@ -1,0 +1,7 @@
+---
+- hosts: all
+  sudo: yes
+  vars:
+    self_ip: "{{ ansible_all_ipv4_addresses | last }}"
+  roles:
+    - cassandra-cluster

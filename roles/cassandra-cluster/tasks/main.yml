@@ -1,0 +1,78 @@
+- debug: var=servers
+
+- debug: var=me
+
+- lineinfile:
+    dest: /etc/hosts
+    line: "{{ item.ip }} {{ item.hostname }}"
+  with_items: servers
+
+- yum: name={{ item }}
+  with_items:
+  - /vagrant/vendor/jre-8u65-linux-x64.rpm
+
+- yum: pkg={{ item }} state=latest
+  with_items:
+  - vim
+  - wget
+  - telnet
+  - nmap-ncat
+  - epel-release
+
+- yum: pkg={{ item }} state=latest
+  with_items:
+  - jna
+
+# - copy:
+#     content: |
+#       [datastax]
+#       name = DataStax Repo for Apache Cassandra
+#       baseurl = http://rpm.datastax.com/community
+#       enabled = 1
+#       gpgcheck = 0
+#     dest: /etc/yum.repos.d/datastax.repo
+# - yum: pkg={{ item }} state=latest
+#   with_items:
+#   - dsc21
+#   - cassandra21
+#   - cassandra21-tools
+
+- unarchive:
+    src: /vagrant/vendor/dsc-cassandra-2.1.11-bin.tar.gz
+    dest: /opt
+    copy: no
+    owner: vagrant
+    creates: /opt/dsc-cassandra-2.1.11
+
+- template:
+    src: cassandra.yaml.j2
+    dest: /opt/dsc-cassandra-2.1.11/conf/cassandra.yaml
+    owner: vagrant
+
+- file:
+    dest: /opt/dsc-cassandra-2.1.11/logs
+    state: directory
+    owner: vagrant
+
+- copy:
+    content: |
+      #!/bin/bash
+      /opt/dsc-cassandra-2.1.11/bin/cassandra > /opt/dsc-cassandra-2.1.11/logs/cassandra.log
+    dest: /home/vagrant/cassandra-start.sh
+    mode: u+x
+    owner: vagrant
+
+- copy:
+    content: |
+      #!/bin/bash
+      /opt/dsc-cassandra-2.1.11/bin/nodetool status
+    dest: /home/vagrant/cassandra-status.sh
+    mode: u+x
+    owner: vagrant
+
+- file:
+    src: /opt/dsc-cassandra-2.1.11/logs/cassandra.log
+    dest: /home/vagrant/cassandra.log
+    force: yes
+    state: link
+    owner: vagrant
