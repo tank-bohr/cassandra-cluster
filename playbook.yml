@@ -3,5 +3,6 @@
   sudo: yes
   vars:
     self_ip: "{{ ansible_all_ipv4_addresses | last }}"
+    cassandra_version: 2.2.3
   roles:
     - cassandra-cluster
